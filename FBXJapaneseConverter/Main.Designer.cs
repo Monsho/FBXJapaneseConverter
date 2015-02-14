@@ -123,6 +123,7 @@
             this.Controls.Add(this.tboxFile);
             this.Name = "Main";
             this.Text = "FBX Japanese Converter";
+            this.Load += new System.EventHandler(this.Main_Load);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.Main_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.Main_DragEnter);
             ((System.ComponentModel.ISupportInitialize)(this.gridConv)).EndInit();

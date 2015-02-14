@@ -33,6 +33,15 @@ namespace FBXJapaneseConverter
             public string scope { get; set; }
         }
 
+        [DataContract]
+        public class ClientInfo
+        {
+            [DataMember]
+            public string client_id { get; set; }
+            [DataMember]
+            public string client_secret { get; set; }
+        }
+
         public class AdmAuthentication
         {
             public static readonly string DatamarketAccessUri = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
@@ -92,6 +101,7 @@ namespace FBXJapaneseConverter
         private List<JapaneseString> m_Japaneses = new List<JapaneseString>();
         private List<string> m_FbxLines = new List<string>();
         private string m_TranslateText = "";
+        private ClientInfo m_ClientInfo = new ClientInfo();
 
         private bool ReadFbx(string filename)
         {
@@ -273,7 +283,7 @@ namespace FBXJapaneseConverter
             if (!string.IsNullOrEmpty(tboxFile.Text))
             {
                 // 元のファイルをバックアップ
-                System.IO.File.Copy(tboxFile.Text, tboxFile.Text + ".bak");
+                System.IO.File.Copy(tboxFile.Text, tboxFile.Text + ".bak", true);
 
                 // セルの内容をコピー
                 CopyCellValue();
@@ -352,10 +362,7 @@ namespace FBXJapaneseConverter
         {
             if (!string.IsNullOrEmpty(tboxFile.Text))
             {
-                string kClientID = "FBXJapaneseConverter";
-                string kClientSecret = "/k8GYTwvGWMT0J0ugw2T561ZRbVlbzx/JdINC5mbB74=";
-
-                var admAuth = new AdmAuthentication(kClientID, kClientSecret);
+                var admAuth = new AdmAuthentication(m_ClientInfo.client_id, m_ClientInfo.client_secret);
                 AdmAccessToken admToken;
                 string headerValue;
                 try
@@ -409,6 +416,36 @@ namespace FBXJapaneseConverter
 
                 // 表示
                 DisplayJapanese();
+            }
+        }
+
+        private void Main_Load(object sender, EventArgs e)
+        {
+            // .iniファイルを読み込んでクライアントIDと秘密鍵を取得する
+            string kIniFileName = "client.ini";
+            if (!System.IO.File.Exists(kIniFileName))
+            {
+                btnTranslate.Enabled = false;
+                return;
+            }
+
+            string json = "";
+            using (StreamReader sr = new StreamReader(kIniFileName, Encoding.UTF8))
+            {
+                json = sr.ReadToEnd();
+            }
+
+            var serializer = new DataContractJsonSerializer(typeof(ClientInfo));
+            var jsonBytes = Encoding.Unicode.GetBytes(json);
+            var ms = new MemoryStream(jsonBytes);
+            try
+            {
+                m_ClientInfo = (ClientInfo)serializer.ReadObject(ms);
+            }
+            catch (Exception)
+            {
+                btnTranslate.Enabled = false;
+                return;
             }
         }
 
